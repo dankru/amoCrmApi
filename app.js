@@ -1,25 +1,24 @@
-const { create } = require('domain');
-const fs = require('fs');
+require('dotenv').config()
+let CONFIG = require('./config.json');
+let auth = require('./auth');
+const { access } = require('fs');
 
-let access_token = '';
-let refresh_token = '';
 let page = 1;
 let contacts = [];
 let userId = 10499042;
 let date = Math.floor(Date.now() / 1000) + 24 * 60 * 60  //tomorrow;
-
+let access_token = auth.readAuthData()[0];
 // TODO: Добавить проверку на то, что такая задача уже существует
 // TODO: Сделать код чище
 
-function readAuthData() {
-    const authData = fs.readFileSync('./authorization.json', { encoding: 'utf8' });
-
-    let tokens = JSON.parse(authData);
-
-    access_token = tokens.access_token;
-    refresh_token = tokens.access_token;
+const httpStatuses = {
+    'OK': 200,
+    'NoContent': 204,
+    'BadRequest': 400,
+    'NotAuthorized': 401
 }
 
+// getContacts возвращает Контакты, либо ошибку
 async function getContacts() {
     try {
         const res = await fetch('https://noiafugace.amocrm.ru/api/v4/contacts?limit=25&with=leads&page=' + page, {
@@ -30,16 +29,19 @@ async function getContacts() {
                 'Authorization': 'Bearer ' + access_token
             }
         })
-        if (res.status == 204) {
+        if (res.status === httpStatuses.NoContent) {
             contacts = contacts.flat(1);
-            contacts = contacts.filter(contact => contact._embedded.leads.length == 0);
+            contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
             createTasks(contacts);
         }
-        else {
+        else if (res.status === httpStatuses.OK) {
             const json = await res.json()
             contacts.push(json._embedded.contacts);
             page++;
             getContacts();
+        }
+        else if (res.status === httpStatuses.NotAuthorized) {
+            console.log('Неверный логин или пароль');
         }
     }
     catch (error) {
@@ -47,6 +49,7 @@ async function getContacts() {
     }
 }
 
+// createTasks Возвращает статус
 function createTasks(contacts) {
     let body = [];
     contacts.forEach(contact => {
@@ -77,6 +80,4 @@ function createTasks(contacts) {
             console.log(err);
         })
 }
-
-readAuthData();
 getContacts();

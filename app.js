@@ -39,7 +39,7 @@ async function getContacts(callback) {
 async function filterTasks(callback) {
     try {
         contacts = contacts.flat(1);
-        contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
+        contacts = contacts.filter(contact => contact._embedded.leads.length == 0);
         const response = await fetch("https://noiafugace.amocrm.ru/api/v4/tasks?filter[entity_type][]='contacts'", {
             method: 'GET',
             headers: {

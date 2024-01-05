@@ -36,66 +36,71 @@ async function getContacts(callback) {
     }
 }
 
-function filterTasks(callback) {
-
-    contacts = contacts.flat(1);
-    contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
-    fetch("https://noiafugace.amocrm.ru/api/v4/tasks?filter[entity_type][]='contacts'", {
-        method: 'GET',
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + access_token
-        }
-    })
-        .then(res => {
-            if (res.status === 204) {
-                callback(contacts);
-            } else { return res.json() }
+async function filterTasks(callback) {
+    try {
+        contacts = contacts.flat(1);
+        contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
+        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/tasks?filter[entity_type][]='contacts'", {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + access_token
+            }
         })
-        .then(json => {
+        if (response.status === 204) {
+            callback(contacts);
+        }
+        else {
+            const json = await response.json();
             let tasks = json._embedded.tasks.filter(task => task.text === 'Контакт без сделок');
             // filter from existing tasks with same message
             contacts = contacts.filter(contact => { return !tasks.some(task => { return task.entity_id === contact.id }) });
             callback(contacts);
-        })
-        .catch(err => {
-            console.log(err);
-        })
+        }
+    }
+
+    catch (error) {
+        console.log(error);
+    }
 }
 
-function createTasks() {
+async function createTasks() {
+
     let body = [];
-    contacts.forEach(contact => {
-        let obj = {
-            "responsible_user_id": parseInt(process.env.userId),
-            "text": "Контакт без сделок",
-            "complete_till": date,
-            "entity_id": contact.id,
-            "entity_type": "contacts"
-        }
+    if (contacts.length !== 0) {
+        contacts.forEach(contact => {
+            let obj = {
+                "responsible_user_id": parseInt(process.env.userId),
+                "text": "Контакт без сделок",
+                "complete_till": date,
+                "entity_id": contact.id,
+                "entity_type": "contacts"
+            }
 
-        body.push(obj);
-    });
+            body.push(obj);
+        });
 
-    fetch('https://noiafugace.amocrm.ru/api/v4/tasks', {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + access_token
-        }
-    })
-        .then(res => res.json())
-        .then(json => {
+        try {
+            const response = await fetch('https://noiafugace.amocrm.ru/api/v4/tasks', {
+                method: 'POST',
+                body: JSON.stringify(body),
+                headers: {
+                    'accept': 'application/json',
+                    'Content-Type': 'application/json',
+                    'Authorization': 'Bearer ' + access_token
+                }
+            })
+            const json = await response.json();
             console.log(json);
-        })
-        .catch(err => {
-            console.log(err);
-        })
+        }
+        catch (error) {
+            console.log(error);
+        }
+    }
+    else {
+        console.log("Every task was filtered out");
+    }
 }
-
-
 
 getContacts(filterTasks);

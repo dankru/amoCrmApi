@@ -37,10 +37,10 @@ function integrate() {
 
 function refreshTokens() {
     let body = {
-        "client_id": env.getEnvValue('client_id'),
-        "client_secret": env.getEnvValue('secret_key'),
+        "client_id": process.env.client_id,
+        "client_secret": process.env.client_secret,
         "grant_type": "refresh_token",
-        "refresh_token": env.getEnvValue('refresh_token'),
+        "refresh_token": CONFIG.refresh_token,
         "redirect_uri": "https://localhost.com"
     };
     fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
@@ -54,8 +54,11 @@ function refreshTokens() {
         .then(res => res.json())
         .then(json => {
             console.log(json);
-            env.setEnvValue('refresh_token', json.refresh_token);
-            env.setEnvValue('access_token', json.access_token);
+            let obj = {
+                "access_token": json.access_token,
+                "refresh_token": json.refresh_token
+            }
+            fs.writeFileSync('./config.json', JSON.stringify(obj));
         })
         .catch(err => {
             console.log(err)
@@ -71,6 +74,7 @@ function readAuthData() {
     //return rokens
     return [dataJson.access_token, dataJson.refresh_token];
 }
+
 
 module.exports.readAuthData = readAuthData;
 module.exports.refreshTokens = refreshTokens;

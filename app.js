@@ -1,12 +1,12 @@
 require('dotenv').config()
-let CONFIG = require('./config.json');
 let auth = require('./auth');
 
 let date = Math.floor(Date.now() / 1000) + 24 * 60 * 60  //tomorrow;
 let access_token = auth.readAuthData()[0];
+let contacts = new Array();
+
 // TODO: Добавить проверку на то, что такая задача уже существует
 // TODO: Сделать код чище
-let contacts = [];
 const httpStatuses = {
     OK: 200,
     NoContent: 204,
@@ -18,7 +18,7 @@ let page = 1;
 
 /**
  * gets contacts array asynchronously, filters and flattens it
- * @return {(String|Array)} contacts with no deals array
+ * @callback createTasks
  */
 async function getContacts() {
     try {
@@ -30,14 +30,17 @@ async function getContacts() {
                 'Authorization': 'Bearer ' + access_token
             }
         })
-        if (response.status == 204) {
-            contacts.flat(1);
-            contacts.filter(contact => contact._embedded.leads.length != 0);
-            createTasks(contacts)
+        
+        if (response.status === httpStatuses.NoContent) {
+            contacts = contacts.flat(1);
+            contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
+            console.log(contacts);
+            createTasks(contacts);
         }
+        
         else {
-            const json = await response.json()
-            contacts = contacts.push[json._embedded.contacts];
+            const json = await response.json();
+            contacts = contacts.concat(json._embedded.contacts);
             page++;
             getContacts();
         }
@@ -83,5 +86,4 @@ function createTasks() {
             console.log(err);
         })
 }
-
 getContacts();

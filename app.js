@@ -31,12 +31,13 @@ async function getContacts() {
             }
         })
         if (response.status == 204) {
+            contacts.flat(1);
             contacts.filter(contact => contact._embedded.leads.length != 0);
             createTasks(contacts)
         }
         else {
             const json = await response.json()
-            contacts = contacts.concat[json._embedded.contacts];
+            contacts = contacts.push[json._embedded.contacts];
             page++;
             getContacts();
         }

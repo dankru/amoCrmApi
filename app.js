@@ -1,27 +1,28 @@
 require('dotenv').config()
 let CONFIG = require('./config.json');
 let auth = require('./auth');
-const { access } = require('fs');
 
-let page = 1;
-let contacts = [];
-let userId = 10499042;
 let date = Math.floor(Date.now() / 1000) + 24 * 60 * 60  //tomorrow;
 let access_token = auth.readAuthData()[0];
 // TODO: Добавить проверку на то, что такая задача уже существует
 // TODO: Сделать код чище
-
+let contacts = [];
 const httpStatuses = {
-    'OK': 200,
-    'NoContent': 204,
-    'BadRequest': 400,
-    'NotAuthorized': 401
+    OK: 200,
+    NoContent: 204,
+    BadRequest: 400,
+    NotAuthorized: 401
 }
 
-// getContacts возвращает Контакты, либо ошибку
+let page = 1;
+
+/**
+ * gets contacts array asynchronously, filters and flattens it
+ * @return {(String|Array)} contacts with no deals array
+ */
 async function getContacts() {
     try {
-        const res = await fetch('https://noiafugace.amocrm.ru/api/v4/contacts?limit=25&with=leads&page=' + page, {
+        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/contacts?limit=25&with=leads&page=" + page, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
@@ -29,19 +30,15 @@ async function getContacts() {
                 'Authorization': 'Bearer ' + access_token
             }
         })
-        if (res.status === httpStatuses.NoContent) {
-            contacts = contacts.flat(1);
-            contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
-            createTasks(contacts);
+        if (response.status == 204) {
+            contacts.filter(contact => contact._embedded.leads.length != 0);
+            createTasks(contacts)
         }
-        else if (res.status === httpStatuses.OK) {
-            const json = await res.json()
-            contacts.push(json._embedded.contacts);
+        else {
+            const json = await response.json()
+            contacts = contacts.concat[json._embedded.contacts];
             page++;
             getContacts();
-        }
-        else if (res.status === httpStatuses.NotAuthorized) {
-            console.log('Неверный логин или пароль');
         }
     }
     catch (error) {
@@ -49,12 +46,17 @@ async function getContacts() {
     }
 }
 
-// createTasks Возвращает статус
-function createTasks(contacts) {
+/**
+ * creates task for each contact
+ * @param {(object|Array)} contacts flattened array of contacts
+ * @returns {String} response http status
+ */
+function createTasks() {
     let body = [];
+
     contacts.forEach(contact => {
         let obj = {
-            "responsible_user_id": userId,
+            "responsible_user_id": parseInt(process.env.userId),
             "text": "Контакт без сделок",
             "complete_till": date,
             "entity_id": contact.id,
@@ -62,7 +64,7 @@ function createTasks(contacts) {
         }
         body.push(obj);
     });
-
+    console.log(body);
     fetch('https://noiafugace.amocrm.ru/api/v4/tasks', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -80,4 +82,5 @@ function createTasks(contacts) {
             console.log(err);
         })
 }
+
 getContacts();

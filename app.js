@@ -15,46 +15,6 @@ const httpStatuses = {
 }
 
 let page = 1;
-
-/**
- * gets contacts array asynchronously, filters and flattens it
- * @callback createTasks
- */
-async function getContacts() {
-    try {
-        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/contacts?limit=25&with=leads&page=" + page, {
-            method: 'GET',
-            headers: {
-                'accept': 'application/json',
-                'Content-Type': 'application/json',
-                'Authorization': 'Bearer ' + access_token
-            }
-        })
-        
-        if (response.status === httpStatuses.NoContent) {
-            contacts = contacts.flat(1);
-            contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
-            console.log(contacts);
-            createTasks(contacts);
-        }
-        
-        else {
-            const json = await response.json();
-            contacts = contacts.concat(json._embedded.contacts);
-            page++;
-            getContacts();
-        }
-    }
-    catch (error) {
-        console.log(error);
-    }
-}
-
-/**
- * creates task for each contact
- * @param {(object|Array)} contacts flattened array of contacts
- * @returns {String} response http status
- */
 function createTasks() {
     let body = [];
 
@@ -66,9 +26,10 @@ function createTasks() {
             "entity_id": contact.id,
             "entity_type": "contacts"
         }
+
         body.push(obj);
     });
-    console.log(body);
+
     fetch('https://noiafugace.amocrm.ru/api/v4/tasks', {
         method: 'POST',
         body: JSON.stringify(body),
@@ -86,4 +47,60 @@ function createTasks() {
             console.log(err);
         })
 }
-getContacts();
+function filterTasks(callback) {
+
+    contacts = contacts.flat(1);
+    contacts = contacts.filter(contact => contact._embedded.leads.length != 0);
+
+    fetch("https://noiafugace.amocrm.ru/api/v4/tasks?filter[entity_type][]='contacts'", {
+        method: 'GET',
+        headers: {
+            'accept': 'application/json',
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + access_token
+        }
+    })
+        .then(res => res.json())
+        .then(json => {
+            let tasks = json._embedded.tasks.filter(task => task.text === 'Контакт без сделок');
+            contacts = contacts.filter(contact => !tasks.includes(contact.id));
+
+        })
+        .catch(err => {
+            console.log(err);
+        })
+    console.log(contacts);
+    callback(contacts);
+}
+async function getContacts(callback) {
+    try {
+        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/contacts?limit=25&with=leads&page=" + page, {
+            method: 'GET',
+            headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + access_token
+            }
+        })
+
+        if (response.status == 204) {
+            callback(createTasks);
+        }
+
+        else {
+            const json = await response.json();
+            contacts = contacts.concat(json._embedded.contacts);
+            page++;
+            getContacts(callback);
+        }
+    }
+    catch (error) {
+        console.log(error);
+    }
+}
+
+
+
+
+getContacts(filterTasks);
+// filterTasks();

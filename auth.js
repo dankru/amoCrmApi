@@ -33,7 +33,7 @@ function integrate() {
             'Content-Type': 'application/json',
         }
     })
-        .then(res => res.json())
+        .then(res => { if (res.ok) { return res.json() } })
         .then(json => {
             console.log(json);
             let tokensObj = {

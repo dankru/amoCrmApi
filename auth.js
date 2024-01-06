@@ -54,7 +54,7 @@ async function integrate() {
 
 }
 
-function refreshTokens() {
+async function refreshTokens() {
     let body = {
         "client_id": process.env.client_id,
         "client_secret": process.env.client_secret,
@@ -62,28 +62,37 @@ function refreshTokens() {
         "refresh_token": CONFIG.refresh_token,
         "redirect_uri": "https://localhost.com"
     };
-    fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-    })
-        .then(res => res.json())
-        .then(json => {
-            console.log(json);
+    try {
+
+        const response = await fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+        const json = await response.json();
+
+        if (response.ok) {
+            console.log("token successfully refreshed, please run again");
             let obj = {
                 "access_token": json.access_token,
                 "refresh_token": json.refresh_token,
                 "integrated": true
             }
             fs.writeFileSync('./config.json', JSON.stringify(obj));
-        })
-        .catch(err => {
-            console.log("Token refreshing failed: \n");
-            console.log(err)
-        })
+        }
+        else {
+            console.log("Token refresh failed: \n");
+            console.log(json);
+        }
+    }
+    catch(error) {
+        console.log("Token refreshing failed: \n");
+        console.log(error);
+    }
+    
 }
 
 // readAuthData возвращает массив [access_token, refresh_token];

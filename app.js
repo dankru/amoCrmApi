@@ -7,7 +7,12 @@ let contacts = new Array();
 let limit = 25;
 let page = 1;
 
-async function getContacts(callback) {
+/**
+ * Gets contacts and passes them to a callback chain
+ * @param {Array} contacts - array of contacts
+ * @param {filterTasks} callback - next callback in chain
+ */
+async function getContacts(contacts, callback) {
     try {
         const response = await fetch("https://noiafugace.amocrm.ru/api/v4/contacts?limit=" + limit + "&with=leads&page=" + page, {
             method: 'GET',
@@ -19,7 +24,7 @@ async function getContacts(callback) {
         })
 
         if (response.status === 204) {
-            callback(createTasks);
+            callback(contacts, createTasks);
         }
 
         else if (response.status === 401) {
@@ -30,7 +35,7 @@ async function getContacts(callback) {
             const json = await response.json();
             contacts = contacts.concat(json._embedded.contacts);
             page++;
-            getContacts(callback);
+            getContacts(contacts, callback);
         }
     }
     catch (error) {
@@ -39,7 +44,13 @@ async function getContacts(callback) {
     }
 }
 
-async function filterTasks(callback) {
+/**
+ * Filters contacts array and passes it to a callback chain
+ * @callback filterTasks
+ * @param {Array.<Object>} contacts - array of contacts
+ * @param {createTasks} callback - next callback in chain
+ */
+async function filterTasks(contacts, callback) {
     try {
         // flatten arrays from different pages
         contacts = contacts.flat(1);
@@ -73,10 +84,15 @@ async function filterTasks(callback) {
         console.log(error);
     }
 }
-
-async function createTasks() {
+/**
+ * Creates tasks for filtered contacts
+ * @callback createTasks 
+ * @param {Array.<Object>} contacts - filtered array of contacts
+ */
+async function createTasks(contacts) {
 
     let body = [];
+    // if we have contacts without task left
     if (contacts.length !== 0) {
         // create task objects
         contacts.forEach(contact => {
@@ -114,4 +130,4 @@ async function createTasks() {
     }
 }
 
-getContacts(filterTasks);
+getContacts(contacts, filterTasks);

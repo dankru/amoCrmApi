@@ -2,7 +2,10 @@ require('dotenv').config()
 let CONFIG = require('./config.json');
 let fs = require('fs');
 
-function authorize(callback) {
+/**
+ * integrates client or refreshes tokens
+ */
+function authorize() {
     let integrated = CONFIG.integrated === true;
     if (!integrated) {
         console.log('not integrated, trying to integrate');
@@ -14,7 +17,10 @@ function authorize(callback) {
     }
 }
 
-// trades for access and refresh tokens
+
+/**
+ * Trades for access and refresh tokens
+ */
 async function integrate() {
 
     let body = {
@@ -53,7 +59,9 @@ async function integrate() {
     }
 
 }
-
+/**
+ * Refreshes tokens
+ */
 async function refreshTokens() {
     let body = {
         "client_id": process.env.client_id,
@@ -88,14 +96,17 @@ async function refreshTokens() {
             console.log(json);
         }
     }
-    catch(error) {
+    catch (error) {
         console.log("Token refreshing failed: \n");
         console.log(error);
     }
-    
+
 }
 
-// readAuthData возвращает массив [access_token, refresh_token];
+/**
+ * Reads tokens and integration info and returns this values in an array
+ * @returns {Array}
+ */
 function readAuthData() {
     //return rokens
     return [CONFIG.access_token, CONFIG.refresh_token, CONFIG.integrated];

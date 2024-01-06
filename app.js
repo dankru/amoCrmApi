@@ -97,7 +97,7 @@ async function createTasks(contacts) {
         // create task objects
         contacts.forEach(contact => {
             let obj = {
-                "responsible_user_id": parseInt(process.env.userId),
+                "responsible_user_id": parseInt(process.env.USER_ID),
                 "text": "Контакт без сделок",
                 "complete_till": date,
                 "entity_id": contact.id,

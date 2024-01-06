@@ -24,9 +24,9 @@ function authorize() {
 async function integrate() {
 
     let body = {
-        "client_id": process.env.client_id,
-        "client_secret": process.env.client_secret,
-        "code": process.env.code,
+        "client_id": process.env.INTEGRATION_ID,
+        "client_secret": process.env.SECRET_KEY,
+        "code": process.env.AUTHORIZATION_CODE,
         "grant_type": "authorization_code",
         "redirect_uri": "https://localhost.com"
     };

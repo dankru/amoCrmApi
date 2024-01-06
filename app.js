@@ -5,7 +5,6 @@ let date = Math.floor(Date.now() / 1000) + 24 * 60 * 60  //tomorrow;
 let access_token = auth.readAuthData()[0];
 let contacts = new Array();
 let limit = 25;
-
 let page = 1;
 
 async function getContacts(callback) {
@@ -35,6 +34,7 @@ async function getContacts(callback) {
         }
     }
     catch (error) {
+        console.log("Failed getting contacts: \n");
         console.log(error);
     }
 }
@@ -69,6 +69,7 @@ async function filterTasks(callback) {
     }
 
     catch (error) {
+        console.log('Task filtering failed: \n')
         console.log(error);
     }
 }
@@ -101,14 +102,15 @@ async function createTasks() {
                 }
             })
             const json = await response.json();
-            console.log(json);
+            console.log("tasks created: " + json._embedded.tasks.length);
         }
         catch (error) {
+            console.log('task creation failed: \n')
             console.log(error);
         }
     }
     else {
-        console.log("Every task was filtered out");
+        console.log("Every task was filtered out, no tasks were created");
     }
 }
 

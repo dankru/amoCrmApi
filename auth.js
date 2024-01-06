@@ -9,13 +9,13 @@ function authorize(callback) {
         integrate();
     }
     else {
-        console.log('refreshing access token');
+        console.log('Refreshing access token');
         refreshTokens();
     }
 }
 
 // trades for access and refresh tokens
-function integrate() {
+async function integrate() {
 
     let body = {
         "client_id": process.env.client_id,
@@ -24,28 +24,34 @@ function integrate() {
         "grant_type": "authorization_code",
         "redirect_uri": "https://localhost.com"
     };
-
-    fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
-        method: 'POST',
-        body: JSON.stringify(body),
-        headers: {
-            'accept': 'application/json',
-            'Content-Type': 'application/json',
-        }
-    })
-        .then(res => { if (res.ok) { return res.json() } })
-        .then(json => {
-            console.log(json);
+    try {
+        const response = await fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
+            method: 'POST',
+            body: JSON.stringify(body),
+            headers: {
+                'accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        })
+        if (response.status === 200) {
+            const json = await response.json();
             let tokensObj = {
                 "access_token": json.access_token,
                 "refresh_token": json.refresh_token,
                 "integrated": true
             }
-            fs.writeFileSync('./config.json', JSON.stringify(tokensObj), { encoding: 'utf8' })
-        })
-        .catch(err => {
-            console.log(err)
-        })
+            fs.writeFileSync('./config.json', JSON.stringify(tokensObj), { encoding: 'utf8' });
+            console.log('integration success, please run again');
+        }
+        else {
+            console.log("integration error, please make sure integration codes are correct");
+        }
+    }
+    catch (error) {
+        console.log("Integration failed: \n");
+        console.log(error);
+    }
+
 }
 
 function refreshTokens() {
@@ -75,13 +81,13 @@ function refreshTokens() {
             fs.writeFileSync('./config.json', JSON.stringify(obj));
         })
         .catch(err => {
+            console.log("Token refreshing failed: \n");
             console.log(err)
         })
 }
 
 // readAuthData возвращает массив [access_token, refresh_token];
 function readAuthData() {
-
     //return rokens
     return [CONFIG.access_token, CONFIG.refresh_token, CONFIG.integrated];
 }

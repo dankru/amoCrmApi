@@ -23,6 +23,10 @@ async function getContacts(callback) {
             callback(createTasks);
         }
 
+        else if (response.status === 401) {
+            auth.authorize();
+        }
+
         else {
             const json = await response.json();
             contacts = contacts.concat(json._embedded.contacts);

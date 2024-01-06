@@ -2,6 +2,18 @@ require('dotenv').config()
 let CONFIG = require('./config.json');
 let fs = require('fs');
 
+function authorize(callback) {
+    let integrated = CONFIG.integrated === true;
+    if (!integrated) {
+        console.log('not integrated, trying to integrate');
+        integrate();
+    }
+    else {
+        console.log('refreshing access token');
+        refreshTokens();
+    }
+}
+
 // trades for access and refresh tokens
 function integrate() {
 
@@ -26,7 +38,8 @@ function integrate() {
             console.log(json);
             let tokensObj = {
                 "access_token": json.access_token,
-                "refresh_token": json.refresh_token
+                "refresh_token": json.refresh_token,
+                "integrated": true
             }
             fs.writeFileSync('./config.json', JSON.stringify(tokensObj), { encoding: 'utf8' })
         })
@@ -56,7 +69,8 @@ function refreshTokens() {
             console.log(json);
             let obj = {
                 "access_token": json.access_token,
-                "refresh_token": json.refresh_token
+                "refresh_token": json.refresh_token,
+                "integrated": true
             }
             fs.writeFileSync('./config.json', JSON.stringify(obj));
         })
@@ -67,14 +81,11 @@ function refreshTokens() {
 
 // readAuthData возвращает массив [access_token, refresh_token];
 function readAuthData() {
-    // read tokens
-    let data = fs.readFileSync('./config.json', { encoding: 'utf8', flag: 'r' });
-    // parse tokens
-    let dataJson = JSON.parse(data);
-    //return rokens
-    return [dataJson.access_token, dataJson.refresh_token];
-}
 
+    //return rokens
+    return [CONFIG.access_token, CONFIG.refresh_token, CONFIG.integrated];
+}
 
 module.exports.readAuthData = readAuthData;
 module.exports.refreshTokens = refreshTokens;
+module.exports.authorize = authorize;

@@ -6,7 +6,7 @@ let access_token = auth.readAuthData()[0];
 let contacts = new Array();
 let limit = 25;
 let page = 1;
-
+let baseUrl = "https://noiafugace.amocrm.ru"
 /**
  * Gets contacts and passes them to a callback chain
  * @param {Array} contacts - array of contacts
@@ -14,7 +14,7 @@ let page = 1;
  */
 async function getContacts(contacts, callback) {
     try {
-        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/contacts?limit=" + limit + "&with=leads&page=" + page, {
+        const response = await fetch(process.env.BASE_URL + "/api/v4/contacts?limit=" + limit + "&with=leads&page=" + page, {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
@@ -57,7 +57,7 @@ async function filterTasks(contacts, callback) {
         // filter out contacts with leads
         contacts = contacts.filter(contact => contact._embedded.leads.length == 0);
         // get existing tasks
-        const response = await fetch("https://noiafugace.amocrm.ru/api/v4/tasks?filter[entity_type][]='contacts'", {
+        const response = await fetch(process.env.BASE_URL + "/api/v4/tasks?filter[entity_type][]='contacts'", {
             method: 'GET',
             headers: {
                 'accept': 'application/json',
@@ -108,7 +108,7 @@ async function createTasks(contacts) {
         });
         // create tasks
         try {
-            const response = await fetch('https://noiafugace.amocrm.ru/api/v4/tasks', {
+            const response = await fetch(process.env.BASE_URL + "/api/v4/tasks", {
                 method: 'POST',
                 body: JSON.stringify(body),
                 headers: {

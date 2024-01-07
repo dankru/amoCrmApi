@@ -31,7 +31,7 @@ async function integrate() {
         "redirect_uri": "https://localhost.com"
     };
     try {
-        const response = await fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
+        const response = await fetch(process.env.BASE_URL + '/oauth2/access_token', {
             method: 'POST',
             body: JSON.stringify(body),
             headers: {
@@ -72,7 +72,7 @@ async function refreshTokens() {
     };
     try {
 
-        const response = await fetch('https://noiafugace.amocrm.ru/oauth2/access_token', {
+        const response = await fetch(process.env.BASE_URL + '/oauth2/access_token', {
             method: 'POST',
             body: JSON.stringify(body),
             headers: {

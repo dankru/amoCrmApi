@@ -1,12 +1,12 @@
 require('dotenv').config()
-let CONFIG = require('./config.json');
+let TOKENS = require('./tokens.json');
 let fs = require('fs');
 
 /**
  * integrates client or refreshes tokens
  */
 function authorize() {
-    let integrated = CONFIG.integrated === true;
+    let integrated = TOKENS.integrated === true;
     if (!integrated) {
         console.log('not integrated, trying to integrate');
         integrate();
@@ -46,7 +46,7 @@ async function integrate() {
                 "refresh_token": json.refresh_token,
                 "integrated": true
             }
-            fs.writeFileSync('./config.json', JSON.stringify(tokensObj), { encoding: 'utf8' });
+            fs.writeFileSync('./tokens.json', JSON.stringify(tokensObj), { encoding: 'utf8' });
             console.log('integration success, please run again');
         }
         else {
@@ -67,7 +67,7 @@ async function refreshTokens() {
         "client_id": process.env.client_id,
         "client_secret": process.env.client_secret,
         "grant_type": "refresh_token",
-        "refresh_token": CONFIG.refresh_token,
+        "refresh_token": TOKENS.refresh_token,
         "redirect_uri": "https://localhost.com"
     };
     try {
@@ -89,7 +89,7 @@ async function refreshTokens() {
                 "refresh_token": json.refresh_token,
                 "integrated": true
             }
-            fs.writeFileSync('./config.json', JSON.stringify(obj));
+            fs.writeFileSync('./tokens.json', JSON.stringify(obj));
         }
         else {
             console.log("Token refresh failed: \n");
@@ -109,7 +109,7 @@ async function refreshTokens() {
  */
 function readAuthData() {
     //return rokens
-    return [CONFIG.access_token, CONFIG.refresh_token, CONFIG.integrated];
+    return [TOKENS.access_token, TOKENS.refresh_token, TOKENS.integrated];
 }
 
 module.exports.readAuthData = readAuthData;

@@ -17,8 +17,8 @@ SECRET_KEY = xxxx
 INTEGRATION_ID = xxxx
 4. Код авторизации. Можно найти там же
 AUTHORIZATION_CODE = xxxx
-5. Базовый URL. Ссылка на ваш кабинет amoCRM
-BASE_URL = https://xxxx.amocrm.ru/
+5. Базовый URL. Ссылка на ваш кабинет amoCRM. В таком же виде как пример ниже:
+BASE_URL = https://xxxx.amocrm.ru
 ### 3. Запуск скрипта
 1. Ввести node app.js в терминал, произойдёт интеграция
 2. Ввести node app.js в терминал повторно, создадутся задачи.
